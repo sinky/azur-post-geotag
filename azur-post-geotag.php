@@ -1,5 +1,5 @@
-<?php  
-/* 
+<?php
+/*
 Plugin Name: Azur Post Geotag
 Plugin URI: http://my-azur.de
 Version: 0.1
@@ -46,7 +46,7 @@ add_action( 'add_meta_boxes', 'azur_post_geotag_add_meta_box' );
 
 /**
  * Prints the box content.
- * 
+ *
  * @param WP_Post $post The object for the current post/page.
  */
 function azur_post_geotag_meta_box_callback( $post ) {
@@ -74,35 +74,70 @@ var map;
 function initialize() {
   var lat = '<?php echo $lat; ?>';
   var lng = '<?php echo $lng; ?>';
+
+  var center, zoom;
+
+  var localOptions = JSON.parse(localStorage.getItem('reisen.azurPostMap'));
+
+  console.log('localOptions', localOptions);
+
+  // Defaults
+  center = new google.maps.LatLng(51, 8);
+  zoom = 6;
+
+  // Last marker position stored local
+  if(localOptions) {
+    center = new google.maps.LatLng(localOptions.lat, localOptions.lng);
+  }
   
-  var center = new google.maps.LatLng(lat || 52, lng || 8);
-  
+  // Post Data
+  if(lat && lng) {
+    center = new google.maps.LatLng(lat, lng);
+  }
+
   var mapOptions = {
-    zoom: 8,
-    center: center
+    center: center,
+    zoom: Number(zoom)
   };
+
   map = new google.maps.Map(document.getElementById('azur_post_geotag_map'), mapOptions);
+
   var marker = new google.maps.Marker({
     position: center,
     map: map,
     draggable: true
   });
+
   google.maps.event.addListener(map, 'click', function(e) {
-    document.getElementById('azur_post_geotag_new_field_geo_latitude').value = e.latLng.lat();
-    document.getElementById('azur_post_geotag_new_field_geo_longitude').value = e.latLng.lng();
     marker.setPosition(e.latLng);
-  });  
-  google.maps.event.addListener(marker, 'dragend', function(e) {
-    document.getElementById('azur_post_geotag_new_field_geo_latitude').value = e.latLng.lat();
-    document.getElementById('azur_post_geotag_new_field_geo_longitude').value = e.latLng.lng();
+    setLatLng(e);
+    saveLocalOptions(e);
   });
+
+  google.maps.event.addListener(marker, 'dragend', function(e) {
+    setLatLng(e);
+    saveLocalOptions(e);
+  });
+
   google.maps.event.addDomListener(document.getElementById('azur_post_geotag_reset'), 'click', function(e) {
     e.preventDefault();
     document.getElementById('azur_post_geotag_new_field_geo_latitude').value = lat;
     document.getElementById('azur_post_geotag_new_field_geo_longitude').value = lng;
     marker.setPosition(new google.maps.LatLng(lat,lng));
-  });  
-  
+  });
+}
+
+function setLatLng(e) {
+  document.getElementById('azur_post_geotag_new_field_geo_latitude').value = e.latLng.lat();
+  document.getElementById('azur_post_geotag_new_field_geo_longitude').value = e.latLng.lng();
+}
+
+function saveLocalOptions(e) {
+  var storeLocalOptions = {
+    lat: e.latLng.lat(),
+    lng: e.latLng.lng()
+  };
+  localStorage.setItem('reisen.azurPostMap', JSON.stringify(storeLocalOptions));
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
@@ -152,7 +187,7 @@ function azur_post_geotag_save_meta_box_data( $post_id ) {
 	}
 
 	/* OK, it's safe for us to save the data now. */
-	
+
 	// Make sure that it is set.
 	if ( ! isset( $_POST['azur_post_geotag_new_field_geo_latitude'] ) && ! isset( $_POST['azur_post_geotag_new_field_geo_longitude'] ) ) {
 		return;
