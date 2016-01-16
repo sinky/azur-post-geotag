@@ -20,8 +20,6 @@ if ( ! defined( 'WPINC' ) ) {
  * Adds a box to the main column on the Post and Page edit screens.
 */
 
-
-
 function azur_post_geotag_scripts() {
   wp_enqueue_script('google-maps', 'https://maps.googleapis.com/maps/api/js?v=3.9');
 }
@@ -61,16 +59,20 @@ function azur_post_geotag_meta_box_callback( $post ) {
 	$lat = get_post_meta( $post->ID, 'geo_latitude', true );
 	$lng = get_post_meta( $post->ID, 'geo_longitude', true );
 
-	echo '<p><label for="azur_post_geotag_new_field">';
+	echo '<p><label for="azur_post_geotag_field">';
 	_e( 'Geolocation', 'azur_post_geotag_textdomain' );
 	echo '</label> ';
-	echo '<input type="text" id="azur_post_geotag_new_field_geo_latitude" name="azur_post_geotag_new_field_geo_latitude" value="' . esc_attr( $lat ) . '" /> ';
-	echo '<input type="text" id="azur_post_geotag_new_field_geo_longitude" name="azur_post_geotag_new_field_geo_longitude" value="' . esc_attr( $lng ) . '" /> ';
-	echo '<button id="azur_post_geotag_reset">Zur&uuml;cksetzen</button></p>';
+	echo '<input type="text" id="azur_post_geotag_field_geo_latitude" name="azur_post_geotag_field_geo_latitude" value="' . esc_attr( $lat ) . '" placeholder="Latitude"/> ';
+	echo '<input type="text" id="azur_post_geotag_field_geo_longitude" name="azur_post_geotag_field_geo_longitude" value="' . esc_attr( $lng ) . '" placeholder="Longitude" /> ';
+	echo '<button id="azur_post_geotag_reset">Rückgänig</button></p>';
   ?>
 <div id="azur_post_geotag_map" style="height: 300px; width: 100%;">Map</div>
 <script>
 var map;
+var azur_post_geotag_reset = document.getElementById('azur_post_geotag_reset');
+var azur_post_geotag_field_geo_latitude = document.getElementById('azur_post_geotag_field_geo_latitude');
+var azur_post_geotag_field_geo_longitude = document.getElementById('azur_post_geotag_field_geo_longitude');
+
 function initialize() {
   var lat = '<?php echo $lat; ?>';
   var lng = '<?php echo $lng; ?>';
@@ -78,8 +80,6 @@ function initialize() {
   var center, zoom;
 
   var localOptions = JSON.parse(localStorage.getItem('reisen.azurPostMap'));
-
-  console.log('localOptions', localOptions);
 
   // Defaults
   center = new google.maps.LatLng(51, 8);
@@ -89,7 +89,7 @@ function initialize() {
   if(localOptions) {
     center = new google.maps.LatLng(localOptions.lat, localOptions.lng);
   }
-  
+
   // Post Data
   if(lat && lng) {
     center = new google.maps.LatLng(lat, lng);
@@ -119,17 +119,38 @@ function initialize() {
     saveLocalOptions(e);
   });
 
-  google.maps.event.addDomListener(document.getElementById('azur_post_geotag_reset'), 'click', function(e) {
+  google.maps.event.addDomListener(azur_post_geotag_reset, 'click', function(e) {
     e.preventDefault();
-    document.getElementById('azur_post_geotag_new_field_geo_latitude').value = lat;
-    document.getElementById('azur_post_geotag_new_field_geo_longitude').value = lng;
+    azur_post_geotag_field_geo_latitude.value = lat;
+    azur_post_geotag_field_geo_longitude.value = lng;
+    map.setCenter(new google.maps.LatLng(lat,lng));
     marker.setPosition(new google.maps.LatLng(lat,lng));
   });
+
+  // automatic split "lat, lng"
+  var handle_latlng_split = function(event) {
+    if(/^\s*-?\d+\.\d+, -?\d+\.\d+\s*$/.test(this.value)) {
+      var coords = this.value.split(',');
+
+      coords[0] = coords[0].trim();
+      coords[1] = coords[1].trim();
+
+      azur_post_geotag_field_geo_latitude.value = coords[0];
+      azur_post_geotag_field_geo_longitude.value = coords[1];
+
+      map.setCenter(new google.maps.LatLng(coords[0], coords[1]));
+      marker.setPosition(new google.maps.LatLng(coords[0], coords[1]));
+    }
+  };
+
+  azur_post_geotag_field_geo_latitude.addEventListener('change', handle_latlng_split);
+  azur_post_geotag_field_geo_longitude.addEventListener('change', handle_latlng_split);
+
 }
 
 function setLatLng(e) {
-  document.getElementById('azur_post_geotag_new_field_geo_latitude').value = e.latLng.lat();
-  document.getElementById('azur_post_geotag_new_field_geo_longitude').value = e.latLng.lng();
+  azur_post_geotag_field_geo_latitude.value = e.latLng.lat();
+  azur_post_geotag_field_geo_longitude.value = e.latLng.lng();
 }
 
 function saveLocalOptions(e) {
@@ -189,13 +210,13 @@ function azur_post_geotag_save_meta_box_data( $post_id ) {
 	/* OK, it's safe for us to save the data now. */
 
 	// Make sure that it is set.
-	if ( ! isset( $_POST['azur_post_geotag_new_field_geo_latitude'] ) && ! isset( $_POST['azur_post_geotag_new_field_geo_longitude'] ) ) {
+	if ( ! isset( $_POST['azur_post_geotag_field_geo_latitude'] ) && ! isset( $_POST['azur_post_geotag_field_geo_longitude'] ) ) {
 		return;
 	}
 
 	// Sanitize user input.
-	$lat = sanitize_text_field( $_POST['azur_post_geotag_new_field_geo_latitude'] );
-	$lng = sanitize_text_field( $_POST['azur_post_geotag_new_field_geo_longitude'] );
+	$lat = sanitize_text_field( $_POST['azur_post_geotag_field_geo_latitude'] );
+	$lng = sanitize_text_field( $_POST['azur_post_geotag_field_geo_longitude'] );
 
 	// Update the meta field in the database.
 	update_post_meta( $post_id, 'geo_latitude', $lat );
