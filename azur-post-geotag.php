@@ -129,7 +129,7 @@ function initialize() {
 
   // automatic split "lat, lng"
   var handle_latlng_split = function(event) {
-    if(/^\s*-?\d+\.\d+, -?\d+\.\d+\s*$/.test(this.value)) {
+    if(/^\s*-?\d+\.\d+,\s?-?\d+\.\d+\s*$/.test(this.value)) {
       var coords = this.value.split(',');
 
       coords[0] = coords[0].trim();
