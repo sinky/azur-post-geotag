@@ -73,13 +73,13 @@ var azur_post_geotag_reset = document.getElementById('azur_post_geotag_reset');
 var azur_post_geotag_field_geo_latitude = document.getElementById('azur_post_geotag_field_geo_latitude');
 var azur_post_geotag_field_geo_longitude = document.getElementById('azur_post_geotag_field_geo_longitude');
 
-function initialize() {
+function azur_post_geotag_initialize() {
   var lat = '<?php echo $lat; ?>';
   var lng = '<?php echo $lng; ?>';
 
   var center, zoom;
 
-  var localOptions = JSON.parse(localStorage.getItem('reisen.azurPostMap'));
+  var localOptions = JSON.parse(localStorage.getItem('<?php echo array_pop(explode('/', get_bloginfo('wpurl'))); ?>.azurPostMap'));
 
   // Defaults
   center = new google.maps.LatLng(51, 8);
@@ -158,10 +158,10 @@ function saveLocalOptions(e) {
     lat: e.latLng.lat(),
     lng: e.latLng.lng()
   };
-  localStorage.setItem('reisen.azurPostMap', JSON.stringify(storeLocalOptions));
+  localStorage.setItem('<?php echo array_pop(explode('/', get_bloginfo('wpurl'))); ?>.azurPostMap', JSON.stringify(storeLocalOptions));
 }
 
-google.maps.event.addDomListener(window, 'load', initialize);
+google.maps.event.addDomListener(window, 'load', azur_post_geotag_initialize);
 </script>
 <?php
 }
