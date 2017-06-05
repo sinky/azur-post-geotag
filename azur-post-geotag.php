@@ -82,7 +82,7 @@ function azur_post_geotag_initialize() {
   var localOptions = JSON.parse(localStorage.getItem('<?php echo array_pop(explode('/', get_bloginfo('wpurl'))); ?>.azurPostMap'));
 
   // Defaults
-  center = new google.maps.LatLng(51, 8);
+  center = new google.maps.LatLng(51, 7);
   zoom = 6;
 
   // Last marker position stored local
@@ -104,12 +104,13 @@ function azur_post_geotag_initialize() {
 
   var marker = new google.maps.Marker({
     position: center,
-    map: map,
+    //map: map,
     draggable: true
   });
 
   google.maps.event.addListener(map, 'click', function(e) {
     marker.setPosition(e.latLng);
+    marker.setMap(map);
     setLatLng(e);
     saveLocalOptions(e);
   });
@@ -217,9 +218,17 @@ function azur_post_geotag_save_meta_box_data( $post_id ) {
 	// Sanitize user input.
 	$lat = sanitize_text_field( $_POST['azur_post_geotag_field_geo_latitude'] );
 	$lng = sanitize_text_field( $_POST['azur_post_geotag_field_geo_longitude'] );
+  
+  // Update the meta field in the database.
+  if($lat == 0 && $lng == 0 || empty($lat) || empty($lng)) {
+    delete_post_meta( $post_id, 'geo_public' );
+    delete_post_meta( $post_id, 'geo_latitude' );
+    delete_post_meta( $post_id, 'geo_longitude' );
+  }else{
+    update_post_meta( $post_id, 'geo_public', 1 );
+    update_post_meta( $post_id, 'geo_latitude', $lat );
+    update_post_meta( $post_id, 'geo_longitude', $lng );
+  }
 
-	// Update the meta field in the database.
-	update_post_meta( $post_id, 'geo_latitude', $lat );
-	update_post_meta( $post_id, 'geo_longitude', $lng );
 }
 add_action( 'save_post', 'azur_post_geotag_save_meta_box_data' );
