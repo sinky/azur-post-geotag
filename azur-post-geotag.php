@@ -21,7 +21,8 @@ if ( ! defined( 'WPINC' ) ) {
 */
 
 function azur_post_geotag_scripts() {
-  wp_enqueue_script('google-maps', 'https://maps.googleapis.com/maps/api/js?v=3.9');
+  wp_enqueue_style('leaflet', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.css');
+  wp_enqueue_script('leaflet-js', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.js');
 }
 add_action( 'admin_enqueue_scripts', 'azur_post_geotag_scripts' );
 
@@ -82,17 +83,17 @@ function azur_post_geotag_initialize() {
   var localOptions = JSON.parse(localStorage.getItem('<?php echo array_pop(explode('/', get_bloginfo('wpurl'))); ?>.azurPostMap'));
 
   // Defaults
-  center = new google.maps.LatLng(51, 7);
+  center = L.latLng(51, 7);
   zoom = 6;
 
   // Last marker position stored local
   if(localOptions) {
-    center = new google.maps.LatLng(localOptions.lat, localOptions.lng);
+    center = new L.latLng(localOptions.lat, localOptions.lng);
   }
 
-  // Post Data
+  // we have Post Data
   if(lat && lng) {
-    center = new google.maps.LatLng(lat, lng);
+    center = new L.latLng(lat, lng);
   }
 
   var mapOptions = {
@@ -100,32 +101,40 @@ function azur_post_geotag_initialize() {
     zoom: Number(zoom)
   };
 
-  map = new google.maps.Map(document.getElementById('azur_post_geotag_map'), mapOptions);
+  map = L.map('azur_post_geotag_map', mapOptions);
 
-  var marker = new google.maps.Marker({
-    position: center,
-    //map: map,
+  var marker = L.marker(center, {
     draggable: true
   });
+	
+  var tile_osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
 
-  google.maps.event.addListener(map, 'click', function(e) {
-    marker.setPosition(e.latLng);
-    marker.setMap(map);
-    setLatLng(e);
-    saveLocalOptions(e);
+  // we have Post Data
+  if(lat && lng) {
+    marker.addTo(map);
+  }
+
+  map.on('click', function(e) {
+    marker.setLatLng(e.latlng);
+    marker.addTo(map);
+    setLatLng(e.latlng);
+    saveLocalOptions(e.latlng);
   });
 
-  google.maps.event.addListener(marker, 'dragend', function(e) {
-    setLatLng(e);
-    saveLocalOptions(e);
+  marker.on('dragend', function(e) {
+		var latlng = this.getLatLng();
+    setLatLng(latlng);
+    saveLocalOptions(latlng);
   });
 
-  google.maps.event.addDomListener(azur_post_geotag_reset, 'click', function(e) {
+  azur_post_geotag_reset.addEventListener('click', function(e) {
     e.preventDefault();
     azur_post_geotag_field_geo_latitude.value = lat;
     azur_post_geotag_field_geo_longitude.value = lng;
-    map.setCenter(new google.maps.LatLng(lat,lng));
-    marker.setPosition(new google.maps.LatLng(lat,lng));
+    map.setView([lat, lng]);
+    marker.setLatLng([lat, lng]);
   });
 
   // automatic split "lat, lng"
@@ -139,8 +148,8 @@ function azur_post_geotag_initialize() {
       azur_post_geotag_field_geo_latitude.value = coords[0];
       azur_post_geotag_field_geo_longitude.value = coords[1];
 
-      map.setCenter(new google.maps.LatLng(coords[0], coords[1]));
-      marker.setPosition(new google.maps.LatLng(coords[0], coords[1]));
+      map.setView([coords[0], coords[1]]);
+      marker.setLatLng([coords[0], coords[1]]);
     }
   };
 
@@ -149,20 +158,20 @@ function azur_post_geotag_initialize() {
 
 }
 
-function setLatLng(e) {
-  azur_post_geotag_field_geo_latitude.value = e.latLng.lat();
-  azur_post_geotag_field_geo_longitude.value = e.latLng.lng();
+function setLatLng(latlng) {
+  azur_post_geotag_field_geo_latitude.value = latlng.lat;
+  azur_post_geotag_field_geo_longitude.value = latlng.lng;
 }
 
-function saveLocalOptions(e) {
+function saveLocalOptions(latlng) {
   var storeLocalOptions = {
-    lat: e.latLng.lat(),
-    lng: e.latLng.lng()
+    lat: latlng.lat,
+    lng: latlng.lng
   };
   localStorage.setItem('<?php echo array_pop(explode('/', get_bloginfo('wpurl'))); ?>.azurPostMap', JSON.stringify(storeLocalOptions));
 }
 
-google.maps.event.addDomListener(window, 'load', azur_post_geotag_initialize);
+window.addEventListener('load', azur_post_geotag_initialize);
 </script>
 <?php
 }
@@ -218,7 +227,7 @@ function azur_post_geotag_save_meta_box_data( $post_id ) {
 	// Sanitize user input.
 	$lat = sanitize_text_field( $_POST['azur_post_geotag_field_geo_latitude'] );
 	$lng = sanitize_text_field( $_POST['azur_post_geotag_field_geo_longitude'] );
-  
+
   // Update the meta field in the database.
   if($lat == 0 && $lng == 0 || empty($lat) || empty($lng)) {
     delete_post_meta( $post_id, 'geo_public' );
