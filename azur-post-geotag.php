@@ -69,7 +69,7 @@ function azur_post_geotag_meta_box_callback( $post ) {
   ?>
 <div id="azur_post_geotag_map" style="height: 300px; width: 100%;">Map</div>
 <script>
-var map;
+var azur_post_geotag_map;
 var azur_post_geotag_reset = document.getElementById('azur_post_geotag_reset');
 var azur_post_geotag_field_geo_latitude = document.getElementById('azur_post_geotag_field_geo_latitude');
 var azur_post_geotag_field_geo_longitude = document.getElementById('azur_post_geotag_field_geo_longitude');
@@ -101,7 +101,7 @@ function azur_post_geotag_initialize() {
     zoom: Number(zoom)
   };
 
-  map = L.map('azur_post_geotag_map', mapOptions);
+  azur_post_geotag_map = L.map('azur_post_geotag_map', mapOptions);
 
   var marker = L.marker(center, {
     draggable: true
@@ -109,16 +109,16 @@ function azur_post_geotag_initialize() {
 	
   var tile_osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
+  }).addTo(azur_post_geotag_map);
 
   // we have Post Data
   if(lat && lng) {
-    marker.addTo(map);
+    marker.addTo(azur_post_geotag_map);
   }
 
-  map.on('click', function(e) {
+  azur_post_geotag_map.on('click', function(e) {
     marker.setLatLng(e.latlng);
-    marker.addTo(map);
+    marker.addTo(azur_post_geotag_map);
     setLatLng(e.latlng);
     saveLocalOptions(e.latlng);
   });
@@ -133,7 +133,7 @@ function azur_post_geotag_initialize() {
     e.preventDefault();
     azur_post_geotag_field_geo_latitude.value = lat;
     azur_post_geotag_field_geo_longitude.value = lng;
-    map.setView([lat, lng]);
+    azur_post_geotag_map.setView([lat, lng]);
     marker.setLatLng([lat, lng]);
   });
 
@@ -148,7 +148,7 @@ function azur_post_geotag_initialize() {
       azur_post_geotag_field_geo_latitude.value = coords[0];
       azur_post_geotag_field_geo_longitude.value = coords[1];
 
-      map.setView([coords[0], coords[1]]);
+      azur_post_geotag_map.setView([coords[0], coords[1]]);
       marker.setLatLng([coords[0], coords[1]]);
     }
   };
