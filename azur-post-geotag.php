@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Azur Post Geotag
-Plugin URI: http://my-azur.de
+Plugin URI: https://github.com/sinky/azur-post-geotag
 Version: 1.0
 Author: Marco Krage
 Author URI: http://my-azur.de
