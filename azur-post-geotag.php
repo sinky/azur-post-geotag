@@ -2,7 +2,7 @@
 /*
 Plugin Name: Azur Post Geotag
 Plugin URI: https://github.com/sinky/azur-post-geotag
-Version: 1.0
+Version: 1.1
 Author: Marco Krage
 Author URI: http://my-azur.de
 Description: Set latlng of Post
@@ -117,9 +117,12 @@ function azur_post_geotag_initialize() {
     marker.addTo(azur_post_geotag_map);
   }
 
+  marker.on('move', function(oldLatLng, latlng) {
+    marker.addTo(azur_post_geotag_map);
+  });
+
   azur_post_geotag_map.on('click', function(e) {
     marker.setLatLng(e.latlng);
-    marker.addTo(azur_post_geotag_map);
     setLatLng(e.latlng);
     saveLocalOptions(e.latlng);
   });
