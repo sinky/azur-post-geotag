@@ -4,7 +4,7 @@ Plugin Name: Azur Post Geotag
 Plugin URI: https://github.com/sinky/azur-post-geotag
 Version: 1.1
 Author: Marco Krage
-Author URI: http://my-azur.de
+Author URI: https://my-azur.de
 Description: Set latlng of Post
 */
 
