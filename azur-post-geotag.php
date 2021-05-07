@@ -70,6 +70,7 @@ function azur_post_geotag_meta_box_callback( $post ) {
 <div id="azur_post_geotag_map" style="height: 300px; width: 100%;">Map</div>
 <script>
 var azur_post_geotag_map;
+var azur_post_geotag_element_id = 'azur_post_geotag_map';
 var azur_post_geotag_reset = document.getElementById('azur_post_geotag_reset');
 var azur_post_geotag_field_geo_latitude = document.getElementById('azur_post_geotag_field_geo_latitude');
 var azur_post_geotag_field_geo_longitude = document.getElementById('azur_post_geotag_field_geo_longitude');
@@ -101,7 +102,7 @@ function azur_post_geotag_initialize() {
     zoom: Number(zoom)
   };
 
-  azur_post_geotag_map = L.map('azur_post_geotag_map', mapOptions);
+  azur_post_geotag_map = L.map(azur_post_geotag_element_id, mapOptions);
 
   var marker = L.marker(center, {
     draggable: true
@@ -158,6 +159,10 @@ function azur_post_geotag_initialize() {
 
   azur_post_geotag_field_geo_latitude.addEventListener('change', handle_latlng_split);
   azur_post_geotag_field_geo_longitude.addEventListener('change', handle_latlng_split);
+
+  new ResizeObserver(entries => {
+    azur_post_geotag_map.invalidateSize();
+  }).observe(document.getElementById(azur_post_geotag_element_id));
 
 }
 
