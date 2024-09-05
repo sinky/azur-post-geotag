@@ -21,8 +21,8 @@ if ( ! defined( 'WPINC' ) ) {
 */
 
 function azur_post_geotag_scripts() {
-  wp_enqueue_style('leaflet', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css');
-  wp_enqueue_script('leaflet-js', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js');
+  wp_enqueue_style('leaflet', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css');
+  wp_enqueue_script('leaflet-js', '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js');
 }
 add_action( 'admin_enqueue_scripts', 'azur_post_geotag_scripts' );
 
